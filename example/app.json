@@ -1,0 +1,22 @@
+{
+  "name": "rn-reddit-editor-example",
+  "displayName": "RnRedditEditor Example",
+  "expo": {
+    "name": "rn-reddit-editor-example",
+    "slug": "rn-reddit-editor-example",
+    "description": "Example app for rn-reddit-editor",
+    "privacy": "public",
+    "version": "1.0.0",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
