@@ -1,4 +1,4 @@
-import Editor from "./Editor";
+import Editor, { EditorHandle } from "./Editor";
 import { serializeQuillContent } from "./contentUtils";
 
-export { Editor, serializeQuillContent };
+export { Editor, EditorHandle, serializeQuillContent };

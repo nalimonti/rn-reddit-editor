@@ -6,13 +6,14 @@ import Toolbar from "./Toolbar";
 import LinkModal from "./LinkModal";
 import {COLORS} from "./constants";
 
-interface EditorHandles {
+export interface EditorHandle {
   addImage: (url: string) => Promise<any>;
   getContents: () => Promise<string>;
   focus: () => void;
+  blur: () => void;
 }
 
-const Editor = forwardRef<EditorHandles, EditorProps>((props, ref) => {
+const Editor = forwardRef<EditorHandle, EditorProps>((props, ref) => {
   const editor = useRef<QuillEditor>(null);
   const [linkModalVisible, setLinkModalVisible] = useState(false);
   const [insertAt, setInsertAt] = useState<number>();
@@ -20,7 +21,8 @@ const Editor = forwardRef<EditorHandles, EditorProps>((props, ref) => {
   useImperativeHandle(ref, () => ({
     addImage,
     getContents,
-    focus: focusEditor
+    focus: focusEditor,
+    blur: blurEditor,
   }))
 
   const getContents = async () => await editor?.current?.getContents();
@@ -52,6 +54,8 @@ const Editor = forwardRef<EditorHandles, EditorProps>((props, ref) => {
   }
 
   const focusEditor = () => editor?.current?.focus();
+
+  const blurEditor = () => editor?.current?.blur();
 
   const editorTheme = useMemo(() => ({
     background: props.theme === 'dark' ? COLORS.ELEVATION_ONE : COLORS.INPUT_BG,
