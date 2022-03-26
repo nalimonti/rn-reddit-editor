@@ -2,7 +2,7 @@ import React, {RefObject, useMemo, useState} from "react";
 import {View, StyleSheet, Image, KeyboardAvoidingView, Platform} from "react-native";
 import QuillEditor from "react-native-cn-quill";
 import ToolbarButton from "./ToolbarButton";
-import {COLORS} from "../constants";
+import {COLORS} from "./constants";
 import {Theme} from "./types";
 
 const ThemedIcon = ({ icon, theme }: { icon: string; theme?: Theme }) => {

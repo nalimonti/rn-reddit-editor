@@ -4,7 +4,7 @@ import {EditorProps} from './types';
 import {View} from "react-native";
 import Toolbar from "./Toolbar";
 import LinkModal from "./LinkModal";
-import {COLORS} from "../constants";
+import {COLORS} from "./constants";
 
 const Editor = forwardRef((props: EditorProps, ref) => {
   const editor = useRef<QuillEditor>(null);

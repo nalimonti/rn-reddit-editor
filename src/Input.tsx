@@ -5,7 +5,7 @@ import {
   Text,
   TextInputProps
 } from "react-native";
-import {COLORS} from "../constants";
+import {COLORS} from "./constants";
 import {Theme} from "./types";
 
 interface Props extends TextInputProps {

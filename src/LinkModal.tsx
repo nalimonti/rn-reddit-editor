@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import {Modal, StyleSheet, Text, Pressable, View, TextInput, KeyboardAvoidingView, Platform} from "react-native";
-import {COLORS} from "../constants";
+import {COLORS} from "./constants";
 import {Theme} from "./types";
 import Input from "./Input";
 
