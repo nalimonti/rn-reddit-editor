@@ -1,18 +1,39 @@
 import * as React from 'react';
 
-import { StyleSheet, View, Text } from 'react-native';
-import { multiply } from 'rn-reddit-editor';
+import {Button, StyleSheet, View} from 'react-native';
+import { Editor, serializeHTMLSegments } from 'rn-reddit-editor';
+import {useRef, useState} from "react";
 
 export default function App() {
-  const [result, setResult] = React.useState<number | undefined>();
+  const [theme, setTheme] = useState('dark');
+  const editor = useRef();
 
-  React.useEffect(() => {
-    multiply(3, 7).then(setResult);
-  }, []);
+  const _pickImage = async () => {
+    await editor?.current?.addImage('https://picsum.photos/200/300');
+  }
+
+  const _submit = async () => {
+    const content = await editor?.current?.getContents();
+    console.log('content', content);
+    const richtextJSON = serializeHTMLSegments(content);
+    console.log('richtextJSON', richtextJSON);
+  }
+
+  const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
 
   return (
     <View style={styles.container}>
-      <Text>Result: {result}</Text>
+      <Editor theme={theme} ref={editor} pickImage={_pickImage} />
+      <Button
+        color="#841584"
+        onPress={toggleTheme}
+        title="Toggle Theme"
+      />
+      <Button
+        color="#841584"
+        onPress={_submit}
+        title="Submit"
+      />
     </View>
   );
 }
@@ -20,8 +41,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   box: {
     width: 60,

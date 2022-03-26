@@ -1,3 +1,4 @@
-export function multiply(a: number, b: number): Promise<number> {
-  return Promise.resolve(a * b);
-}
+import Editor from "./Editor";
+import { serializeQuillContent } from "./contentUtils";
+
+export { Editor, serializeQuillContent };
