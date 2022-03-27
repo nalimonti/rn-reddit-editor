@@ -76,14 +76,14 @@ type Formats = Array<number[]>;
 
 // TODO handle spoilers
 const serializeChildNodes = (node: ChildNode) => {
-  const iterate = (n: ChildNode|Element, parts: Segment[], tags: string[]): Segment[] => {
+  const iterate = (n: any, parts: Segment[], tags: string[]): Segment[] => {
     //TODO better way to handle this?
     const href = n.attributes?.getNamedItem('href')?.nodeValue;
     if (n.nodeType === 3 && !!n.nodeValue) {
       parts.push({ text: n.nodeValue, tags: [ ...tags ] });
     }
     const children = Array.from(n.childNodes || []);
-    children?.forEach(c => iterate(c, parts, [ ...tags, c.nodeName, ...(href?.length ? [ `href:${href}` ] : []) ]));
+    children?.forEach(c => iterate(c, parts, [ ...tags, (c as ChildNode).nodeName, ...(href?.length ? [ `href:${href}` ] : []) ]));
     return parts;
   }
   const segments = iterate(node, [], [ node.nodeName ]),
@@ -153,7 +153,7 @@ const serializeBlockquote = (nodes: ChildNode[], segments: RichTextJSONSegment[]
   });
 }
 
-export const htmlToRichTextJSON = (html: string, uploadIds?: { [filepath: string]: string }) => {
+export const htmlToRichTextJSON = (html: string) => {
   const parsedDoc = html?.length ? new DOMParser().parseFromString(html, 'text/html') : undefined;
   const segments: RichTextJSONSegment[] = [];
   const nodes = parsedDoc?.childNodes;
