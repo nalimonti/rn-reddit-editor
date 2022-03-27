@@ -2,10 +2,17 @@
 
 Rich text Reddit editor for React Native
 
+Built on top of the excellent [`react-native-cn-quill`](https://www.npmjs.com/package/react-native-cn-quill) package.
+###NOTE: This is a work in progress!
+
 ## Installation
 
 ```sh
 npm install rn-reddit-editor
+```
+or
+```sh
+yarn add rn-reddit-editor
 ```
 
 ## Usage
@@ -18,17 +25,21 @@ const App = () => {
   const [theme, setTheme] = useState('light');
   const [html, setHtml] = useState<string>();
 
-  const _pickImage = () => {
+  const _pickImage = async () => {
     // retrieve an image url
     const url = 'image.png';
-    // embed the image
-    editor?.current?.addImage(url);
+    // embed the image in the markup
+    await editor?.current?.addImage(url);
   }
 
-  const _submit = () => {
+  const _submit = async () => {
       // convert raw HTML to Reddit richtext JSON
       const richtextJSON = htmlToRichTextJSON(html);
-      //...
+      const formData = new FormData();
+      // add richtext JSON to request body
+      formData.append('richtext_json', JSON.stringify(richtextJSON));
+      // ...
+      await submitComment(formData);
   }
 
   const _toggleTheme = () =>
@@ -51,7 +62,7 @@ const App = () => {
 
 ## Attributions
 ### Icons
-Please abide by the attribution rules according to www.flaticon.com and www.thenounproject.com.
+Please adhere to the attribution rules according to www.flaticon.com and www.thenounproject.com.
 - Bold: Bold icons created by Google - Flaticon (https://www.flaticon.com/free-icons/bold)
 - Italic: Italic icons created by Freepik - Flaticon (https://www.flaticon.com/free-icons/italic)
 - Strikethrough: Strikethrough text icons created by Freepik - Flaticon (https://www.flaticon.com/free-icons/strikethrough-text)
