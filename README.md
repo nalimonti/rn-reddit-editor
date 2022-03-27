@@ -11,11 +11,12 @@ npm install rn-reddit-editor
 ## Usage
 
 ```js
-import { Editor, serializeQuillContent } from "rn-reddit-editor";
+import { Editor, htmlToRichTextJSON, EditorHandle } from "rn-reddit-editor";
 
 const App = () => {
-  const editor = useRef();
+  const editor = useRef<EditorHandle>();
   const [theme, setTheme] = useState('light');
+  const [html, setHtml] = useState<string>();
 
   const _pickImage = () => {
     // retrieve an image url
@@ -24,13 +25,14 @@ const App = () => {
     editor?.current?.addImage(url);
   }
 
-  const _submit = async () => {
-      // fetch the raw editor content
-      const quillContent = await editor?.current?.getContents();
-      // convert editor content to Reddit richtext JSON
-      const richtextJSON = serializeQuillContent(quillContent);
+  const _submit = () => {
+      // convert raw HTML to Reddit richtext JSON
+      const richtextJSON = htmlToRichTextJSON(html);
       //...
   }
+
+  const _toggleTheme = () =>
+    setTheme(theme === 'light' ? 'dark' : 'light')
 
   return (
     <>
@@ -38,8 +40,10 @@ const App = () => {
         theme={theme}
         ref={editor}
         pickImage={_pickImage}
+        setHtml={setHtml}
       />
       <Button onPress={_submit}>Submit</Button>
+      <Button onPress={_toggleTheme}>Toggle Theme</Button>
     </>
   )
 }

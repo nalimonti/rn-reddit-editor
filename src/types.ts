@@ -9,24 +9,6 @@ export interface EditorProps {
   setHtml: (html: string) => void;
 }
 
-export interface QuillOp {
-  insert?: string | { image: string };
-  attributes?: {
-    header?: number;
-    bold?: boolean;
-    blockquote?: boolean;
-    italic?: boolean;
-    strike?: boolean;
-    code?: boolean;
-    'code-block'?: boolean;
-    script?: 'super';
-    color?: string;
-    background?: string;
-    list?: 'ordered'|'bullet';
-    link?: string;
-  }
-}
-
 export interface PostQuillSegment {
   text?: string;
   attributes?: {
@@ -46,11 +28,13 @@ export interface PostQuillSegment {
   }
 }
 
-export interface PostJSONSegment {
-  e: 'text'|'spoilertext'|'raw'|'link'|'img';
+export interface RichTextJSONSegment {
+  e: 'text'|'spoilertext'|'raw'|'link'|'img'|'blockquote'|'par'|'h'|'list'|'li'|'code';
+  o?: boolean;
+  l?: number;
   id?: string;
   t?: string;
   f?: Array<number[]>;
-  c?: [ { e: 'text', t: string } ] | string;
+  c?: RichTextJSONSegment[] | string;
   u?: string;
 }

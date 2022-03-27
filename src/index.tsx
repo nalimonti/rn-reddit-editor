@@ -1,4 +1,4 @@
 import Editor, { EditorHandle } from "./Editor";
-import { serializeQuillContent } from "./contentUtils";
+import { htmlToRichTextJSON } from "./contentUtils";
 
-export { Editor, EditorHandle, serializeQuillContent };
+export { Editor, EditorHandle, htmlToRichTextJSON };

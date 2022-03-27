@@ -1,12 +1,12 @@
 import * as React from 'react';
 
 import {Button, StyleSheet, View} from 'react-native';
-import { Editor, serializeQuillContent } from 'rn-reddit-editor';
+import { Editor, EditorHandle, htmlToRichTextJSON } from 'rn-reddit-editor';
 import {useRef, useState} from "react";
 
 export default function App() {
   const [theme, setTheme] = useState('dark');
-  const editor = useRef();
+  const editor = useRef<EditorHandle>();
   const [html, setHtml] = useState<string>();
 
   const _pickImage = async () => {
@@ -14,7 +14,7 @@ export default function App() {
   }
 
   const _submit = async () => {
-    serializeQuillContent(html);
+    htmlToRichTextJSON(html);
   }
 
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
