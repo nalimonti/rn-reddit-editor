@@ -1,4 +1,5 @@
-import {PostQuillSegment, PostJSONSegment, QuillOp} from "./types";
+import {PostQuillSegment, PostJSONSegment} from "./types";
+import { DOMParser } from 'xmldom';
 
 const FORMAT_CODES = {
   BOLD: 1,
@@ -8,7 +9,7 @@ const FORMAT_CODES = {
   CODE: 64,
 }
 
-export const serializeHTMLSegments = (row: PostQuillSegment[]) => {
+export const serializeHTMLSegments = (row: PostQuillSegment[], stripNewlines?: boolean) => {
   let t = '', formats: Array<number[]> = [];
   const segments: PostJSONSegment[] = [];
   for (let i = 0; i < row.length; i++) {
@@ -32,16 +33,21 @@ export const serializeHTMLSegments = (row: PostQuillSegment[]) => {
       formats = [];
       continue;
     }
-    if (bold || italic || strike) {
+    if (bold || italic || strike || code || script) {
       let weight = 0;
       if (bold) weight += FORMAT_CODES.BOLD;
       if (italic) weight += FORMAT_CODES.ITALIC;
       if (strike) weight += FORMAT_CODES.STRIKE;
       if (code) weight += FORMAT_CODES.CODE;
       if (script === 'super') weight += FORMAT_CODES.SUPER;
-      if (!!weight) formats.push([ weight, t.length, t.length + (text || '').length ]);
+      if (!!weight && !!text?.length && /[^\s]/.test(text)) {
+        let len = (text || '').length;
+        if (text[text.length - 1] === ' ') len = text.length - 1;
+        formats.push([ weight, t.length, len ]);
+      }
     }
     t += text || '';
+    if (stripNewlines) t = _stripNewlines(t);
     if (isSpoiler || i === row.length - 1) {
       segments.push({
         e: isSpoiler ? 'spoilertext' : 'text',
@@ -63,172 +69,144 @@ export const serializeHTMLSegments = (row: PostQuillSegment[]) => {
   return segments;
 }
 
-export const serializeQuillContent = (ops: QuillOp[], uploadIds?: { [filepath: string]: string }) => {
-  console.log('submit', ops)
-  const doc: Array<PostQuillSegment[]> = [];
-  let text = '', attrs = {};
+const _stripNewlines = (str: string) => str.replace(/\r|\n/g, '')
 
-  //TODO handle image
-  for (let i = 0; i < ops.length; i++) {
-    const { insert, attributes } = ops[i],
-      isImg = typeof insert === 'object' && 'image' in insert,
-      hasNewline = typeof insert === 'string' && /\r|\n/g.test(insert || ''),
-      hasNonNewline = typeof insert === 'string' && /[^\r|\n]/g.test(insert || '');
+type Segment = { text: string; tags: string[] }
+type Formats = Array<number[]>;
 
-    if (isImg) {
-      if (text.length) {
-        doc.push([ { text, attributes: attrs } ]);
-        text = '';
-        attrs = {};
-      }
-      doc.push([ { text: undefined, attributes: { image: insert.image } } ]);
-      doc.push([]);
-      continue;
+const serializeChildNodes = (node: ChildNode) => {
+  const iterate = (n: ChildNode, parts: Segment[], tags: string[]): Segment[] => {
+    if (n.nodeType === 3 && !!n.nodeValue) {
+      parts.push({ text: n.nodeValue, tags: [ ...tags ] });
     }
-
-    attrs = { ...(attrs || {}), ...(attributes || {}) };
-    text += insert || '';
-
-    if (!doc.length) {
-      doc.push([ { text, attributes: attrs } ]);
-      text = '';
-      if (hasNewline) doc.push([]);
-      continue;
-    }
-
-    if (hasNewline) {
-      if (insert?.length === 1 && Object.keys(attributes || {}).length) {
-        doc[doc.length - 1].forEach(segment => {
-          segment.attributes = { ...(segment.attributes || {}), ...attributes };
-        })
-      }
-      if (!hasNonNewline) {
-        doc[doc.length - 1].push({ text, attributes: text.length > 1 ? attrs : undefined });
-        text = '';
-        attrs = {};
-      }
-
-      if (i === ops.length - 1) {
-        doc[doc.length - 1].push({ text, attributes: attrs });
-        continue;
-      }
-
-      doc.push([]);
-      continue;
-    }
-    doc[doc.length - 1].push({ text, attributes: attrs });
-    text = '';
-    attrs = {
-      ...attributes,
-      ...(attributes?.link ? { link: undefined} : {}),
-    };
+    const children = Array.from(n.childNodes || []);
+    children?.forEach(c => iterate(c, parts, [ ...tags, c.nodeName ]));
+    return parts;
   }
+  const segments = iterate(node, [], [ node.nodeName ]),
+    f: Formats = [];
+  let t = '';
+  segments.forEach(({ text, tags }) => {
+    let tagWeight = 0;
+    tags.forEach(tag => {
+      if (['strong', 'b'].includes(tag)) tagWeight += FORMAT_CODES.BOLD;
+      if (tag === 's') tagWeight += FORMAT_CODES.STRIKE;
+      if (['i', 'em'].includes(tag)) tagWeight += FORMAT_CODES.ITALIC;
+      if (tag === 'code') tagWeight = FORMAT_CODES.CODE;
+      if (tag === 'sup') tagWeight = FORMAT_CODES.SUPER;
+    })
+    if (!!tagWeight && text.length && /[^\s]/.test(text)) {
+      let len = text.length;
+      if (text[text.length - 1] === ' ') len = text.length - 1;
+      f.push([ tagWeight, t.length, len ]);
+    }
+    t += text;
+  })
+  return { t, ...(f.length ? { f } : {}) };
+}
 
-  console.log('doc', doc);
-
-  const serialized = [];
-  for (let i = 0; i < doc.length; i++) {
-    const row: PostQuillSegment[] = doc[i];
-    const [ first ] = row || [],
-      { header, blockquote, list, 'code-block': isCodeBlock, image } = first?.attributes ?? {};
-    if (image && image.length) {
-      const { [image]: assetId } = uploadIds || {};
-      serialized.push({
-        e: 'img',
-        id: assetId,
-      })
-      continue;
-    }
-    if (header) {
-      serialized.push({
-        e: 'h',
-        l: 1,
-        c: [
-          {
-            e: 'raw',
-            t: (row || []).map(({ text }) => text).join('')
-          }
-        ]
-      })
-      continue;
-    }
-    if (isCodeBlock) {
-      let endIdx = i, codeBlock = false;
-      do {
-        const [ s ] = doc[endIdx + 1] || [],
-          { 'code-block': cb } = s?.attributes ?? {};
-        if (codeBlock) endIdx++;
-        codeBlock = !!cb;
-      } while (codeBlock);
-      serialized.push({
-        e: 'code',
-        c: doc.slice(i, endIdx).map(row => {
-          return {
-            e: 'raw',
-            t: row.map(({ text }) => text).join(''),
-          }
-        })
-      })
-      if (endIdx - 1 > i) i = endIdx - 1;
-      continue;
-    }
-    if (blockquote) {
-      let endIdx = i, isBlockquote = false;
-      do {
-        const [ s ] = doc[endIdx + 1],
-          { blockquote } = s?.attributes ?? {};
-        if (isBlockquote) endIdx++;
-        isBlockquote = !!blockquote;
-      } while (isBlockquote)
-      serialized.push({
-        e: 'blockquote',
-        c: doc.slice(i, endIdx).map(row => {
-          return {
-            e: 'par',
-            c: serializeHTMLSegments(row),
-          }
-        })
-      })
-      if (endIdx - 1 > i) i = endIdx - 1;
-      continue;
-    }
-    if (!!list) {
-      let endIdx = i, isList = false;
-      do {
-        const [ s ] = doc[endIdx + 1],
-          { text } = s || {},
-          { list: sList } = s?.attributes ?? {};
-        if (typeof text === 'string' && /\r|\n/g.test(text) && text.length === 1) {
-          endIdx++;
-          isList = true;
-          continue;
-        }
-        if (list === sList) endIdx++;
-        isList = sList === list;
-      } while (isList)
-      serialized.push({
-        e: 'list',
-        o: list === 'ordered',
-        c: doc.slice(i, endIdx + 1).map(row => {
-          return {
-            e: 'li',
-            c: [
-              {
-                e: 'par',
-                c: serializeHTMLSegments(row),
-              }
-            ]
-          }
-        }),
-      })
-      if (endIdx > i) i = endIdx;
-      continue;
-    }
+const serializeCodeBlock = (node: ChildNode, serialized) => {
+  const codeText = node.childNodes.item(0).nodeValue;
+  if (codeText?.length) {
     serialized.push({
-      e: 'par',
-      c: serializeHTMLSegments(row),
+      e: 'code',
+      c: codeText.split(/\n|\r/).map(t => ({ e: 'raw', t }))
     })
   }
-  console.log('xcv', serialized)
-  return { document: serialized };
+}
+
+const serializeList = (node: ChildNode, serialized) => {
+  serialized.push({
+    e: 'list',
+    o: node.nodeName === 'ol',
+    c: Array.from(node.childNodes || []).map(x => ({
+      e: 'li',
+      c: [
+        {
+          e: 'par',
+          c: [
+            {
+              e: 'text',
+              ...serializeChildNodes(x)
+            }
+          ]
+        }
+      ]
+    })),
+  })
+}
+
+const serializeHeader = (node: ChildNode, serialized) => {
+  serialized.push({
+    e: 'h',
+    l: 1,
+    c: [
+      {
+        e: 'raw',
+        t: node.childNodes.item(0).nodeValue,
+      }
+    ]
+  })
+}
+
+const serializeBlockquote = (nodes: ChildNode[], serialized) => {
+  serialized.push({
+    e: 'blockquote',
+    c: nodes.map(x => ({
+      e: 'par',
+      c: [
+        {
+          e: 'text',
+          ...serializeChildNodes(x)
+        }
+      ]
+    }))
+  });
+}
+
+export const serializeQuillContent = (html: string, uploadIds?: { [filepath: string]: string }) => {
+  console.log('submit', html)
+  const parsedDoc = html?.length ? new DOMParser().parseFromString(html, 'text/html') : undefined;
+  const htmlSerialized = [];
+  const nodes = parsedDoc?.childNodes;
+  if (nodes?.length) {
+    for (let i = 0; i <= nodes.length - 1; i++) {
+      const node = nodes.item(i),
+        type = node.nodeName;
+      switch (type) {
+        case 'h1':
+          serializeHeader(node, htmlSerialized);
+          continue;
+        case 'ol':
+        case 'ul':
+          serializeList(node, htmlSerialized);
+          continue;
+        case 'blockquote':
+          let endIdx = i, nextNode;
+          do {
+            nextNode = nodes.item(endIdx + 1);
+            if (nextNode?.nodeName === 'blockquote') endIdx++;
+          } while (nextNode?.nodeName === 'blockquote' && endIdx < nodes.length - 2)
+          serializeBlockquote(Array.from(nodes).slice(i, endIdx + 1), htmlSerialized)
+          if (endIdx > i) i = endIdx;
+          continue;
+        case 'pre':
+          serializeCodeBlock(node, htmlSerialized);
+          continue;
+        default:
+          htmlSerialized.push({
+            e: 'par',
+            c: [
+              {
+                e: 'text',
+                ...serializeChildNodes(node),
+              }
+            ]
+          })
+      }
+    }
+  }
+  console.log('html serialized', htmlSerialized)
+
+  return { document: htmlSerialized };
 }

@@ -37,7 +37,7 @@ const ToolbarButton = (props: Props) => {
           {
             transform: [ { scale } ],
             opacity,
-            ...(props.active ? { backgroundColor: props.theme === 'dark' ? 'rgba(255,255,255,0.04)' : '#aaa' } : {})
+            ...(props.active ? { backgroundColor: props.theme === 'dark' ? 'rgba(255,255,255,0.3)' : '#aaa' } : {})
           }
         ]}
       >

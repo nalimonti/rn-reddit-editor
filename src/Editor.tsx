@@ -8,9 +8,10 @@ import {COLORS} from "./constants";
 
 export interface EditorHandle {
   addImage: (url: string) => Promise<any>;
-  getContents: () => Promise<string>;
+  getContents: () => Promise<{ contents: any; html?: string }>;
   focus: () => void;
   blur: () => void;
+  dangerouslyPasteHTML: (index: number, html: string) => void;
 }
 
 const Editor = forwardRef<EditorHandle, EditorProps>((props, ref) => {
@@ -23,7 +24,10 @@ const Editor = forwardRef<EditorHandle, EditorProps>((props, ref) => {
     getContents,
     focus: focusEditor,
     blur: blurEditor,
+    dangerouslyPasteHTML
   }))
+
+  const dangerouslyPasteHTML = (index: number, html: string) => editor?.current?.dangerouslyPasteHTML(index, html);
 
   const getContents = async () => await editor?.current?.getContents();
 
@@ -63,6 +67,8 @@ const Editor = forwardRef<EditorHandle, EditorProps>((props, ref) => {
     color: props.theme === 'dark' ? COLORS.DARK_TEXT : COLORS.DARK_GRAY,
   }), [ props.theme ])
 
+  const onHtmlChange = ({ html }: { html: string }) => props.setHtml(html);
+
   return (
     <>
       <View style={{ flex: 1, flexDirection: 'column' }}>
@@ -71,6 +77,7 @@ const Editor = forwardRef<EditorHandle, EditorProps>((props, ref) => {
             ref={editor}
             style={{ flex: 1 }}
             theme={editorTheme}
+            onHtmlChange={onHtmlChange}
             {...(props.editorProps || {})}
           />
         </View>

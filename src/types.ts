@@ -6,12 +6,13 @@ export interface EditorProps {
   theme?: Theme;
   pickImage: () => void;
   editorProps?: QuillEditorProps;
+  setHtml: (html: string) => void;
 }
 
 export interface QuillOp {
   insert?: string | { image: string };
   attributes?: {
-    header?: string;
+    header?: number;
     bold?: boolean;
     blockquote?: boolean;
     italic?: boolean;

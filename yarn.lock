@@ -2005,6 +2005,11 @@
   resolved "https://registry.yarnpkg.com/@types/stack-utils/-/stack-utils-2.0.1.tgz#20f18294f797f2209b5f65c8e3b5c8e8261d127c"
   integrity sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==
 
+"@types/xmldom@^0.1.31":
+  version "0.1.31"
+  resolved "https://registry.yarnpkg.com/@types/xmldom/-/xmldom-0.1.31.tgz#519b647cfc66debf82cdf50e49763c8fdee553d6"
+  integrity sha512-bVy7s0nvaR5D1mT1a8ZkByHWNOGb6Vn4yi5TWhEdmyKlAG+08SA7Md6+jH+tYmMLueAwNeWvHHpeKrr6S4c4BA==
+
 "@types/yargs-parser@*":
   version "21.0.0"
   resolved "https://registry.yarnpkg.com/@types/yargs-parser/-/yargs-parser-21.0.0.tgz#0c60e537fa790f5f9472ed2776c2b71ec117351b"
@@ -9187,6 +9192,11 @@ xmldoc@^1.1.2:
   integrity sha512-ruPC/fyPNck2BD1dpz0AZZyrEwMOrWTO5lDdIXS91rs3wtm4j+T8Rp2o+zoOYkkAxJTZRPOSnOGei1egoRmKMQ==
   dependencies:
     sax "^1.2.1"
+
+xmldom@^0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/xmldom/-/xmldom-0.6.0.tgz#43a96ecb8beece991cef382c08397d82d4d0c46f"
+  integrity sha512-iAcin401y58LckRZ0TkI4k0VSM1Qg0KGSc3i8rU+xrxe19A/BN1zHyVSJY7uoutVlaTSzYyk/v5AmkewAP7jtg==
 
 xtend@~4.0.1:
   version "4.0.2"

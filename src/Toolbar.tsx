@@ -149,7 +149,7 @@ const Toolbar = (props: Props) => {
     }
     addFormat(format, quillValue);
     if (quillKey) props.editor?.current?.format(quillKey, quillValue || true);
-    if (quillKey === 'code' || quillKey === 'code-block' && props.theme === 'dark') {
+    if ((quillKey === 'code' || quillKey === 'code-block') && props.theme === 'dark') {
       props.editor?.current?.format('color', 'crimson');
       props.editor?.current?.format('background', 'white');
     }
