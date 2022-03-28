@@ -1,8 +1,5 @@
-import {PostQuillSegment, RichTextJSONSegment} from "./types";
+import {RichTextJSONSegment} from "./types";
 import { DOMParser } from 'xmldom';
-import { setupURLPolyfill } from 'react-native-url-polyfill';
-
-setupURLPolyfill();
 
 const FORMAT_CODES = {
   BOLD: 1,
@@ -11,68 +8,6 @@ const FORMAT_CODES = {
   SUPER: 32,
   CODE: 64,
 }
-
-export const serializeHTMLSegments = (row: PostQuillSegment[], stripNewlines?: boolean) => {
-  let t = '', formats: Array<number[]> = [];
-  const segments: RichTextJSONSegment[] = [];
-  for (let i = 0; i < row.length; i++) {
-    const { text, attributes } = row[i],
-      { bold, italic, strike, code, script, color, background, link } = attributes || {},
-      isSpoiler = color === 'white' && background === 'black';
-    if (link && link.length) {
-      if (t.length) {
-        segments.push({
-          e: 'text',
-          t,
-          f: formats,
-        });
-      }
-      segments.push({
-        e: 'link',
-        t: text,
-        u: link,
-      });
-      t = '';
-      formats = [];
-      continue;
-    }
-    if (bold || italic || strike || code || script) {
-      let weight = 0;
-      if (bold) weight += FORMAT_CODES.BOLD;
-      if (italic) weight += FORMAT_CODES.ITALIC;
-      if (strike) weight += FORMAT_CODES.STRIKE;
-      if (code) weight += FORMAT_CODES.CODE;
-      if (script === 'super') weight += FORMAT_CODES.SUPER;
-      if (!!weight && !!text?.length && /[^\s]/.test(text)) {
-        let len = (text || '').length;
-        if (text[text.length - 1] === ' ') len = text.length - 1;
-        formats.push([ weight, t.length, len ]);
-      }
-    }
-    t += text || '';
-    if (stripNewlines) t = _stripNewlines(t);
-    if (isSpoiler || i === row.length - 1) {
-      segments.push({
-        e: isSpoiler ? 'spoilertext' : 'text',
-        ...(
-          !isSpoiler
-            ? {
-              t,
-              f: formats,
-            }
-            : {
-              c: [ { e: 'text', t } ]
-            }
-        ),
-      });
-      t = '';
-      formats = [];
-    }
-  }
-  return segments;
-}
-
-const _stripNewlines = (str: string) => str.replace(/\r|\n/g, '')
 
 const _isSpoiler = (node: Element) => {
   const styles = node.attributes?.getNamedItem('style')?.nodeValue ?? '';
@@ -170,7 +105,6 @@ const serializeBlockquote = (nodes: ChildNode[], segments: RichTextJSONSegment[]
 }
 
 export const htmlToRichTextJSON = (html: string) => {
-  console.log('html', html)
   const parsedDoc = html?.length ? new DOMParser().parseFromString(html, 'text/html') : undefined;
   const segments: RichTextJSONSegment[] = [];
   const nodes = parsedDoc?.childNodes;
