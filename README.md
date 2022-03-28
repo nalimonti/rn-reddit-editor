@@ -63,23 +63,22 @@ const App = () => {
 ## Attributions
 ### Icons
 Please adhere to the attribution rules according to www.flaticon.com and www.thenounproject.com.
-- Bold: Bold icons created by Google - Flaticon (https://www.flaticon.com/free-icons/bold)
-- Italic: Italic icons created by Freepik - Flaticon (https://www.flaticon.com/free-icons/italic)
-- Strikethrough: Strikethrough text icons created by Freepik - Flaticon (https://www.flaticon.com/free-icons/strikethrough-text)
-- Web programming: created by Pixel perfect - Flaticon (https://www.flaticon.com/free-icon/web-programming_2809371?term=code&page=1&position=60&page=1&position=60&related_id=2809371&origin=search#)
-- Code: Code icons created by Pixel perfect - Flaticon (https://www.flaticon.com/free-icons/code)
-- Quote: Quote icons created by Mayor Icons - Flaticon (https://www.flaticon.com/free-icons/quote)
-- Heading: Heading icons created by Md Tanvirul Haque - Flaticon (https://www.flaticon.com/free-icons/heading)
-- Superscript: Superscript icons created by Pixel perfect - Flaticon (https://www.flaticon.com/free-icons/superscript)
-- Number list: Number icons created by Pixel perfect - Flaticon (https://www.flaticon.com/free-icons/number)
-- Bullet list: List icons created by Freepik - Flaticon (https://www.flaticon.com/free-icons/list)
-- Eraser: Eraser icons created by Freepik - Flaticon (https://www.flaticon.com/free-icons/eraser)
-- Link: Link icons created by Royyan Wijaya - Flaticon (https://www.flaticon.com/free-icons/link)
-- Clear format: Clear format icons created by Bharat Icons - Flaticon (https://www.flaticon.com/free-icons/clear-format)
-- Photo: Photo icons created by Freepik - Flaticon (https://www.flaticon.com/free-icons/photo)
-- Redaction: Redaction by Dan Hetteix from NounProject.com (https://thenounproject.com/icon/redaction-28201/)
-  <a href="https://www.flaticon.com/free-icons/code" title="code icons">Code icons created by Pixel perfect - Flaticon</a>
-
+- Bold: https://www.flaticon.com/free-icon/bold_114304
+- Italic: https://www.flaticon.com/premium-icon/italics_2824288
+- Strikethrough: https://www.flaticon.com/premium-icon/strikethrough_2209539
+- Code block: https://www.flaticon.com/free-icon/code_984196
+- Code: https://www.flaticon.com/free-icon/coding_711284
+- Quote: https://www.flaticon.com/premium-icon/quote_4338295
+- Heading: https://www.flaticon.com/premium-icon/heading_4662543
+- Superscript: https://www.flaticon.com/premium-icon/superscript_4662634
+- Number list: https://thenounproject.com/icon/number-list-4161243/
+- Bullet list: https://thenounproject.com/icon/list-1247047/
+- Eraser: https://www.flaticon.com/premium-icon/eraser_2708461
+- Link: https://thenounproject.com/icon/link-2805275/
+- Clear format: https://thenounproject.com/icon/text-remove-format-120485/
+- Image: https://thenounproject.com/icon/image-777906/
+- Hide: https://www.flaticon.com/premium-icon/hidden_3287898
+- Close: https://www.flaticon.com/free-icon/close_2089733
 ## Contributing
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.

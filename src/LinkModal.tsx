@@ -35,7 +35,7 @@ const LinkModal = (props: Props) => {
 
   const validateURL = () => {
     let error: string|undefined = undefined;
-    if (!!(url && url.length)) error = 'Required field';
+    if (!url || !url.length) error = 'Required field';
     if (!isValidURL(url)) error = 'Invalid URL';
     setErrors(prev => ({
       ...(prev || {}),
@@ -80,7 +80,7 @@ const LinkModal = (props: Props) => {
               value={title}
               onChangeText={setTitle}
               ref={titleInput}
-              placeholder="Title"
+              placeholder="Title (optional)"
               returnKeyType="next"
               blurOnSubmit={false}
               selectTextOnFocus={true}

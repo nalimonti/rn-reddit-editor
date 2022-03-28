@@ -1,6 +1,8 @@
 import {PostQuillSegment, RichTextJSONSegment} from "./types";
 import { DOMParser } from 'xmldom';
-import {COLORS} from "./constants";
+import { setupURLPolyfill } from 'react-native-url-polyfill';
+
+setupURLPolyfill();
 
 const FORMAT_CODES = {
   BOLD: 1,
