@@ -47,8 +47,10 @@ enum FORMAT {
 
 const STYLES = {
   [FORMAT.SPOILER]: {
-    light: { color: COLORS.DARK_TEXT, background: COLORS.DARK_BACKGROUND },
-    dark: { color: COLORS.DARK_GRAY, background: 'white' },
+    // light: { color: COLORS.DARK_TEXT, background: COLORS.DARK_BACKGROUND },
+    light: { color: 'white', background: 'black' },
+    // dark: { color: COLORS.DARK_GRAY, background: 'white' },
+    dark: { color: 'black', background: 'white' },
   }
 }
 
@@ -170,6 +172,7 @@ const Toolbar = (props: Props) => {
       props.editor?.current?.insertText(range.index, selectedText, {});
     }
     [ ...Object.values(FORMAT), 'color', 'background' ].map(format => props.editor?.current?.format(format, undefined))
+    setActiveFormats({});
   }
 
   const divider = useMemo(() => (

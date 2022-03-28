@@ -3,6 +3,7 @@ import {Modal, StyleSheet, Text, Pressable, View, TextInput, KeyboardAvoidingVie
 import {COLORS} from "./constants";
 import {Theme} from "./types";
 import Input from "./Input";
+import {isValidURL} from "./contentUtils";
 
 interface Props {
   visible: boolean;
@@ -21,12 +22,8 @@ const LinkModal = (props: Props) => {
 
   useEffect(() => {
     if (!dirty && (title.length || url.length)) setDirty(true);
-    setErrors(prev => ({
-      ...(prev || {}),
-      title: !!(title && title.length) ? undefined : 'Required field',
-      url: !!(url && url.length) ? undefined : 'Required field',
-    }))
-  }, [ title, url ])
+    validateURL();
+  }, [ url ])
 
   useEffect(() => {
     if (props.visible) {
@@ -36,9 +33,20 @@ const LinkModal = (props: Props) => {
     else reset();
   }, [ props.visible ])
 
+  const validateURL = () => {
+    let error: string|undefined = undefined;
+    if (!!(url && url.length)) error = 'Required field';
+    if (!isValidURL(url)) error = 'Invalid URL';
+    setErrors(prev => ({
+      ...(prev || {}),
+      url: error
+    }));
+  }
+
   const reset = () => {
     setTitle('');
     setUrl('');
+    setErrors({});
   }
 
   const close = () => props.setVisible(false);
@@ -94,6 +102,8 @@ const LinkModal = (props: Props) => {
               dirty={dirty}
               error={!!errors.url}
               helperText={!!errors.url && dirty ? errors.url : undefined}
+              autoCapitalize="none"
+              autoComplete="off"
             />
             <View style={styles.actionsRow}>
               <Pressable

@@ -5,7 +5,7 @@ import { Editor, EditorHandle, htmlToRichTextJSON } from 'rn-reddit-editor';
 import {useRef, useState} from "react";
 
 export default function App() {
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
   const editor = useRef<EditorHandle>();
   const [html, setHtml] = useState<string>();
 
@@ -14,7 +14,7 @@ export default function App() {
   }
 
   const _submit = async () => {
-    htmlToRichTextJSON(html);
+    console.log(htmlToRichTextJSON(html));
   }
 
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');

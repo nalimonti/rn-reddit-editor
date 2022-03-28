@@ -1,5 +1,6 @@
 import {PostQuillSegment, RichTextJSONSegment} from "./types";
 import { DOMParser } from 'xmldom';
+import {COLORS} from "./constants";
 
 const FORMAT_CODES = {
   BOLD: 1,
@@ -71,19 +72,25 @@ export const serializeHTMLSegments = (row: PostQuillSegment[], stripNewlines?: b
 
 const _stripNewlines = (str: string) => str.replace(/\r|\n/g, '')
 
+const _isSpoiler = (node: Element) => {
+  const styles = node.attributes?.getNamedItem('style')?.nodeValue ?? '';
+  return (styles.includes(`color: white`) && styles.includes(`background-color: black`))
+    || (styles.includes(`color: black`) && styles.includes(`background-color: white`));
+}
+
 type Segment = { text: string; tags: string[] }
 type Formats = Array<number[]>;
 
-// TODO handle spoilers
 const serializeChildNodes = (node: ChildNode) => {
   const iterate = (n: any, parts: Segment[], tags: string[]): Segment[] => {
     //TODO better way to handle this?
+    const isSpoiler = _isSpoiler(n);
     const href = n.attributes?.getNamedItem('href')?.nodeValue;
     if (n.nodeType === 3 && !!n.nodeValue) {
       parts.push({ text: n.nodeValue, tags: [ ...tags ] });
     }
     const children = Array.from(n.childNodes || []);
-    children?.forEach(c => iterate(c, parts, [ ...tags, (c as ChildNode).nodeName, ...(href?.length ? [ `href:${href}` ] : []) ]));
+    children?.forEach(c => iterate(c, parts, [ ...tags, (c as ChildNode).nodeName, ...(isSpoiler ? [ 'spoiler' ] : []), ...(href?.length ? [ `href:${href}` ] : []) ]));
     return parts;
   }
   const segments = iterate(node, [], [ node.nodeName ]),
@@ -91,9 +98,16 @@ const serializeChildNodes = (node: ChildNode) => {
   let t = '', f: Formats = [];
   segments.forEach(({ text, tags }) => {
     if (tags.includes('a')) {
-      if (t.length) ret.push({ e: 'text', t, f: [ ...f ] });
+      if (t.length) ret.push({ e: 'text', t, ...(f.length ? { f: [ ...f ] } : {}) });
       const href = tags.find(t => t.includes('href:'))?.replace('href:', '');
       ret.push({ e: 'link', t: text, u: href });
+      t = '';
+      f = [];
+      return;
+    }
+    if (tags.includes('spoiler')) {
+      if (t.length) ret.push({ e: 'text', t });
+      ret.push({ e: 'spoilertext', c: [ { e: 'text', t: text } ] });
       t = '';
       f = [];
       return;
@@ -113,7 +127,7 @@ const serializeChildNodes = (node: ChildNode) => {
     }
     t += text;
   })
-  ret.push({ e: 'text', t, ...(f.length ? { f } : {}) });
+  if (t.length) ret.push({ e: 'text', t, ...(f.length ? { f } : {}) });
   return ret;
 }
 
@@ -122,7 +136,7 @@ const serializeCodeBlock = (node: ChildNode, segments: RichTextJSONSegment[]) =>
   if (codeText?.length) {
     segments.push({
       e: 'code',
-      c: codeText.split(/\n|\r/).map(t => ({ e: 'raw', t }))
+      c: codeText.split(/\n|\r/).filter(x => !!x.length).map(t => ({ e: 'raw', t }))
     })
   }
 }
@@ -154,6 +168,7 @@ const serializeBlockquote = (nodes: ChildNode[], segments: RichTextJSONSegment[]
 }
 
 export const htmlToRichTextJSON = (html: string) => {
+  console.log('html', html)
   const parsedDoc = html?.length ? new DOMParser().parseFromString(html, 'text/html') : undefined;
   const segments: RichTextJSONSegment[] = [];
   const nodes = parsedDoc?.childNodes;
@@ -193,4 +208,10 @@ export const htmlToRichTextJSON = (html: string) => {
     }
   }
   return { document: segments };
+}
+
+export const isValidURL = (str: string) => {
+  let url;
+  try { url = new URL(str); } catch (_) { return false; }
+  return /https?/.test(url.protocol);
 }
