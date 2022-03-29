@@ -105,13 +105,26 @@ const serializeBlockquote = (nodes: ChildNode[], segments: RichTextJSONSegment[]
 }
 
 export const htmlToRichTextJSON = (html: string) => {
+  console.log('html', html);
   const parsedDoc = html?.length ? new DOMParser().parseFromString(html, 'text/html') : undefined;
   const segments: RichTextJSONSegment[] = [];
   const nodes = parsedDoc?.childNodes;
   if (nodes?.length) {
     for (let i = 0; i <= nodes.length - 1; i++) {
       const node = nodes.item(i),
-        type = node.nodeName;
+        type = node.nodeName,
+        imgNode = type === 'img'
+          ? node
+          : Array.from(node.childNodes || []).find(({ nodeName }) => nodeName === 'img');
+
+      if (!!imgNode) {
+        const src = (imgNode as Element).attributes?.getNamedItem('src')?.nodeValue,
+          assetId = (imgNode as Element).attributes?.getNamedItem('data-asset-id')?.nodeValue,
+          caption = (imgNode as Element).attributes?.getNamedItem('data-caption')?.nodeValue;
+        if (src && assetId) segments.push({ e: 'img', id: assetId, c: caption || '' })
+        continue;
+      }
+
       switch (type) {
         case 'h1':
           serializeHeader(node, segments);

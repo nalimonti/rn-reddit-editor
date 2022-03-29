@@ -7,6 +7,7 @@ export interface EditorProps {
   pickImage: () => void;
   editorProps?: QuillEditorProps;
   setHtml: (html: string) => void;
+  accessToken?: string;
 }
 
 export interface RichTextJSONSegment {
