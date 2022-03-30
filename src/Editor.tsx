@@ -5,10 +5,33 @@ import {View} from "react-native";
 import Toolbar from "./Toolbar";
 import LinkModal from "./LinkModal";
 import {COLORS} from "./constants";
+import {uploadImage} from "./uploadUtils";
+
+const CUSTOM_QUILL_JS = `
+const InlineBlot = Quill.import('blots/block');
+class ImageBlot extends InlineBlot {
+  static create(data) {
+    const node = super.create(data);
+    node.setAttribute('src', data.url);
+    node.setAttribute('data-asset-id', data.assetId || '');
+    node.setAttribute('data-caption', data.caption || '');
+    node.setAttribute('data-src', data.url);
+    return node;
+  }
+  static value(domNode) {
+    const { src, 'asset-id': assetId, caption } = domNode.dataset;
+    return { src, assetId, caption };
+  }
+}
+ImageBlot.blotName = 'imageBlot';
+ImageBlot.className = 'image-blot';
+ImageBlot.tagName = 'img';
+Quill.register({ 'formats/imageBlot': ImageBlot });
+`;
 
 export interface EditorHandle {
-  addImage: (url: string) => Promise<any>;
-  getContents: () => Promise<{ contents: any; html?: string }>;
+  addImage: (url: string, caption?: string) => Promise<any>;
+  getContents: () => Promise<any>;
   focus: () => void;
   blur: () => void;
   dangerouslyPasteHTML: (index: number, html: string) => void;
@@ -18,6 +41,7 @@ const Editor = forwardRef<EditorHandle, EditorProps>((props, ref) => {
   const editor = useRef<QuillEditor>(null);
   const [linkModalVisible, setLinkModalVisible] = useState(false);
   const [insertAt, setInsertAt] = useState<number>();
+  const [focused, setFocused] = useState(false);
 
   useImperativeHandle(ref, () => ({
     addImage,
@@ -37,9 +61,14 @@ const Editor = forwardRef<EditorHandle, EditorProps>((props, ref) => {
     props.pickImage();
   }
 
-  const addImage = async (url: string) => {
-    await editor?.current?.insertEmbed(insertAt || 0, 'image', url);
+  const addImage = async (url: string, caption?: string) => {
+    if (!props.accessToken || !props.accessToken.length) throw new Error('Access token required for image upload');
+    const assetId = await uploadImage(url, props.accessToken);
+    await editor?.current?.insertEmbed(insertAt || 0, 'imageBlot', { url, assetId, caption });
     setInsertAt(undefined);
+    const text = await editor?.current?.getText();
+    await editor?.current?.insertText(text.length - 1, '\n');
+    await editor?.current?.setSelection(text.length + 1, 0);
   }
 
   const onAddLink = async () => {
@@ -69,6 +98,10 @@ const Editor = forwardRef<EditorHandle, EditorProps>((props, ref) => {
 
   const onHtmlChange = ({ html }: { html: string }) => props.setHtml(html);
 
+  const onFocus = () => setFocused(true);
+
+  const onBlur = () => setFocused(false);
+
   return (
     <>
       <View style={{ flex: 1, flexDirection: 'column' }}>
@@ -78,6 +111,9 @@ const Editor = forwardRef<EditorHandle, EditorProps>((props, ref) => {
             style={{ flex: 1 }}
             theme={editorTheme}
             onHtmlChange={onHtmlChange}
+            customJS={CUSTOM_QUILL_JS}
+            onFocus={onFocus}
+            onBlur={onBlur}
             {...(props.editorProps || {})}
           />
         </View>
@@ -87,6 +123,8 @@ const Editor = forwardRef<EditorHandle, EditorProps>((props, ref) => {
           focusEditor={focusEditor}
           onAddImagePress={onAddImagePress}
           theme={props.theme}
+          visible={focused}
+          allowAddImage={!!(props.accessToken && props.accessToken.length)}
         />
       </View>
       <LinkModal

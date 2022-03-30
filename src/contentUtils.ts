@@ -111,7 +111,18 @@ export const htmlToRichTextJSON = (html: string) => {
   if (nodes?.length) {
     for (let i = 0; i <= nodes.length - 1; i++) {
       const node = nodes.item(i),
-        type = node.nodeName;
+        type = node.nodeName,
+        imgNode = type === 'img'
+          ? node
+          : Array.from(node.childNodes || []).find(({ nodeName }) => nodeName === 'img');
+      // node is image or has image child
+      if (!!imgNode) {
+        const src = (imgNode as Element).attributes?.getNamedItem('src')?.nodeValue,
+          assetId = (imgNode as Element).attributes?.getNamedItem('data-asset-id')?.nodeValue,
+          caption = (imgNode as Element).attributes?.getNamedItem('data-caption')?.nodeValue;
+        if (src && assetId) segments.push({ e: 'img', id: assetId, ...(!!caption?.length ? { c: caption } : {}) })
+        continue;
+      }
       switch (type) {
         case 'h1':
           serializeHeader(node, segments);

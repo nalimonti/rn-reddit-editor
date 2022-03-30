@@ -60,6 +60,8 @@ interface Props {
   focusEditor: () => void;
   onAddImagePress: () => void;
   theme?: Theme;
+  visible: boolean;
+  allowAddImage: boolean;
 }
 
 const ICONS: { [key: string]: any } = {
@@ -183,107 +185,116 @@ const Toolbar = (props: Props) => {
     <KeyboardAvoidingView
       onTouchStart={(e) => e.stopPropagation()}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={20}
     >
-      <View
-        style={[
-          styles.container,
-          props.theme === 'dark' && { backgroundColor: COLORS.DARK_BACKGROUND }
-        ]}
-      >
-        <ToolbarButton
-          active={formatActive(FORMAT.BOLD)}
-          onPress={() => {
-            toggleFormat(FORMAT.BOLD, 'bold')()
-          }}
-          theme={props.theme}
-        >
-          <MemoizedThemedIcon icon={FORMAT.BOLD} theme={props.theme} />
-        </ToolbarButton>
-        <ToolbarButton
-          active={formatActive(FORMAT.ITALIC)}
-          onPress={toggleFormat(FORMAT.ITALIC, 'italic')}
-          theme={props.theme}
-        >
-          <MemoizedThemedIcon icon={FORMAT.ITALIC} theme={props.theme} />
-        </ToolbarButton>
-        <ToolbarButton
-          active={formatActive(FORMAT.STRIKE)}
-          onPress={toggleFormat(FORMAT.STRIKE, 'strike')}
-          theme={props.theme}
-        >
-          <MemoizedThemedIcon icon={FORMAT.STRIKE} theme={props.theme} />
-        </ToolbarButton>
-        { divider }
-        <ToolbarButton
-          active={formatActive(FORMAT.CODE)}
-          onPress={toggleFormat(FORMAT.CODE, 'code')}
-          theme={props.theme}
-        >
-          <MemoizedThemedIcon icon={FORMAT.CODE} theme={props.theme} />
-        </ToolbarButton>
-        <ToolbarButton
-          active={formatActive(FORMAT.CODE_BLOCK)}
-          theme={props.theme}
-          onPress={toggleFormat(FORMAT.CODE_BLOCK, 'code-block')}
-        >
-          <MemoizedThemedIcon icon={FORMAT.CODE_BLOCK} theme={props.theme} />
-        </ToolbarButton>
-        <ToolbarButton
-          active={formatActive(FORMAT.BLOCKQUOTE)}
-          theme={props.theme}
-          onPress={toggleFormat(FORMAT.BLOCKQUOTE, 'blockquote')}
-        >
-          <MemoizedThemedIcon icon={FORMAT.BLOCKQUOTE} theme={props.theme} />
-        </ToolbarButton>
-        { divider }
-        <ToolbarButton
-          active={formatActive(FORMAT.HEADER)}
-          onPress={toggleFormat(FORMAT.HEADER, 'header')}
-        >
-          <MemoizedThemedIcon icon={FORMAT.HEADER} theme={props.theme} />
-        </ToolbarButton>
-        <ToolbarButton
-          active={formatActive(FORMAT.SUPER)}
-          onPress={toggleFormat(FORMAT.SUPER, 'script', 'super')}
-        >
-          <MemoizedThemedIcon icon={FORMAT.SUPER} theme={props.theme} />
-        </ToolbarButton>
-        <VerticalDivider />
-        <ToolbarButton
-          active={formatActive(FORMAT.LIST, 'bullet')}
-          onPress={toggleFormat(FORMAT.LIST, 'list', 'bullet')}
-        >
-          <MemoizedThemedIcon icon={FORMAT.LIST} theme={props.theme} />
-        </ToolbarButton>
-        <ToolbarButton
-          active={formatActive(FORMAT.LIST, 'ordered')}
-          onPress={toggleFormat(FORMAT.LIST, 'list', 'ordered')}
-        >
-          <MemoizedThemedIcon icon="number" theme={props.theme} />
-        </ToolbarButton>
-        { divider }
-        <ToolbarButton onPress={props.onAddLink}>
-          <MemoizedThemedIcon icon="link" theme={props.theme} />
-        </ToolbarButton>
-        <ToolbarButton onPress={props.onAddImagePress}>
-          <MemoizedThemedIcon icon="image" theme={props.theme} />
-        </ToolbarButton>
-        { divider }
-        <ToolbarButton
-          active={formatActive(FORMAT.SPOILER)}
-          onPress={toggleStyle(FORMAT.SPOILER)}
-        >
-          <MemoizedThemedIcon icon={FORMAT.SPOILER} theme={props.theme} />
-        </ToolbarButton>
-        <ToolbarButton
-          onPress={erase}
-        >
-          <MemoizedThemedIcon icon="eraser" theme={props.theme} />
-        </ToolbarButton>
-        <ToolbarButton onPress={clearFormat}>
-          <MemoizedThemedIcon icon="clear_format" theme={props.theme} />
-        </ToolbarButton>
-      </View>
+      {
+        props.visible && (
+          <View
+            style={[
+              styles.container,
+              props.theme === 'dark' && { backgroundColor: COLORS.DARK_BACKGROUND }
+            ]}
+          >
+            <ToolbarButton
+              active={formatActive(FORMAT.BOLD)}
+              onPress={() => {
+                toggleFormat(FORMAT.BOLD, 'bold')()
+              }}
+              theme={props.theme}
+            >
+              <MemoizedThemedIcon icon={FORMAT.BOLD} theme={props.theme} />
+            </ToolbarButton>
+            <ToolbarButton
+              active={formatActive(FORMAT.ITALIC)}
+              onPress={toggleFormat(FORMAT.ITALIC, 'italic')}
+              theme={props.theme}
+            >
+              <MemoizedThemedIcon icon={FORMAT.ITALIC} theme={props.theme} />
+            </ToolbarButton>
+            <ToolbarButton
+              active={formatActive(FORMAT.STRIKE)}
+              onPress={toggleFormat(FORMAT.STRIKE, 'strike')}
+              theme={props.theme}
+            >
+              <MemoizedThemedIcon icon={FORMAT.STRIKE} theme={props.theme} />
+            </ToolbarButton>
+            { divider }
+            <ToolbarButton
+              active={formatActive(FORMAT.CODE)}
+              onPress={toggleFormat(FORMAT.CODE, 'code')}
+              theme={props.theme}
+            >
+              <MemoizedThemedIcon icon={FORMAT.CODE} theme={props.theme} />
+            </ToolbarButton>
+            <ToolbarButton
+              active={formatActive(FORMAT.CODE_BLOCK)}
+              theme={props.theme}
+              onPress={toggleFormat(FORMAT.CODE_BLOCK, 'code-block')}
+            >
+              <MemoizedThemedIcon icon={FORMAT.CODE_BLOCK} theme={props.theme} />
+            </ToolbarButton>
+            <ToolbarButton
+              active={formatActive(FORMAT.BLOCKQUOTE)}
+              theme={props.theme}
+              onPress={toggleFormat(FORMAT.BLOCKQUOTE, 'blockquote')}
+            >
+              <MemoizedThemedIcon icon={FORMAT.BLOCKQUOTE} theme={props.theme} />
+            </ToolbarButton>
+            { divider }
+            <ToolbarButton
+              active={formatActive(FORMAT.HEADER)}
+              onPress={toggleFormat(FORMAT.HEADER, 'header')}
+            >
+              <MemoizedThemedIcon icon={FORMAT.HEADER} theme={props.theme} />
+            </ToolbarButton>
+            <ToolbarButton
+              active={formatActive(FORMAT.SUPER)}
+              onPress={toggleFormat(FORMAT.SUPER, 'script', 'super')}
+            >
+              <MemoizedThemedIcon icon={FORMAT.SUPER} theme={props.theme} />
+            </ToolbarButton>
+            <VerticalDivider />
+            <ToolbarButton
+              active={formatActive(FORMAT.LIST, 'bullet')}
+              onPress={toggleFormat(FORMAT.LIST, 'list', 'bullet')}
+            >
+              <MemoizedThemedIcon icon={FORMAT.LIST} theme={props.theme} />
+            </ToolbarButton>
+            <ToolbarButton
+              active={formatActive(FORMAT.LIST, 'ordered')}
+              onPress={toggleFormat(FORMAT.LIST, 'list', 'ordered')}
+            >
+              <MemoizedThemedIcon icon="number" theme={props.theme} />
+            </ToolbarButton>
+            { divider }
+            <ToolbarButton onPress={props.onAddLink}>
+              <MemoizedThemedIcon icon="link" theme={props.theme} />
+            </ToolbarButton>
+            {
+              props.allowAddImage && (
+                <ToolbarButton onPress={props.onAddImagePress}>
+                  <MemoizedThemedIcon icon="image" theme={props.theme} />
+                </ToolbarButton>
+              )
+            }
+            { divider }
+            <ToolbarButton
+              active={formatActive(FORMAT.SPOILER)}
+              onPress={toggleStyle(FORMAT.SPOILER)}
+            >
+              <MemoizedThemedIcon icon={FORMAT.SPOILER} theme={props.theme} />
+            </ToolbarButton>
+            <ToolbarButton
+              onPress={erase}
+            >
+              <MemoizedThemedIcon icon="eraser" theme={props.theme} />
+            </ToolbarButton>
+            <ToolbarButton onPress={clearFormat}>
+              <MemoizedThemedIcon icon="clear_format" theme={props.theme} />
+            </ToolbarButton>
+          </View>
+        )
+      }
     </KeyboardAvoidingView>
   )
 }

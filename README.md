@@ -3,7 +3,7 @@
 Rich text Reddit editor for React Native
 
 Built on top of the excellent [`react-native-cn-quill`](https://www.npmjs.com/package/react-native-cn-quill) package.
-###NOTE: This is a work in progress!
+##NOTE: This is a work in progress!
 
 ## Installation
 
@@ -14,6 +14,93 @@ or
 ```sh
 yarn add rn-reddit-editor
 ```
+
+##Editor Props
+`theme`
+
+Theme applied to the editor and toolbar
+
+| Type                  | Required |
+|-----------------------|----------|
+| `'dark'` or `'light'` | Yes      |
+
+-----
+
+`pickImage`
+
+Function invoked when user presses on the toolbar image icon.
+It is up to you to handle image selection.
+
+| Type         | Required |
+|--------------|----------|
+| `() => void` | No       |
+
+-----
+
+`editorProps`
+
+[`react-native-cn-quill`](https://www.npmjs.com/package/react-native-cn-quill) editor props
+
+| Type                                                                                                     | Required |
+|----------------------------------------------------------------------------------------------------------|----------|
+| [`EditorProps`](https://github.com/imnapo/react-native-cn-quill/blob/master/src/editor/quill-editor.tsx) | No       |
+
+----
+
+`setHtml`
+
+Callback invoked when editor's HTML has changed
+
+| Type                      | Required |
+|---------------------------|----------|
+| `(html: string) => void`  | Yes      |
+
+----
+
+`accessToken`
+
+Reddit access token. Required if you want to allow embedded images.
+If this property is not specified, the toolbar will not include an image button.
+
+| Type     | Required |
+|----------|----------|
+| `string` | No       |
+
+---
+
+##Editor Methods
+
+`addImage(url: string, caption?: string): Promise<any>`
+
+Embeds an image into the editor HTML.
+This should generally be invoked from within the `pickImage` callback.
+
+----
+
+`focus()`
+
+Focuses the editor
+
+----
+
+`blur()`
+
+Blurs the editor
+
+----
+
+`getContents(): Promise<any>`
+
+Returns the inner Quill JSON content
+
+----
+
+`dangerouslyPasteHTML(html: string): Promise<void>`
+
+Pastes the specified HTML into the editor
+
+----
+
 
 ## Usage
 
@@ -27,9 +114,10 @@ const App = () => {
 
   const _pickImage = async () => {
     // retrieve an image url
-    const url = 'image.png';
+    const url = 'image.png',
+        caption = 'My awesome caption!';
     // embed the image in the markup
-    await editor?.current?.addImage(url);
+    await editor?.current?.addImage(url, caption);
   }
 
   const _submit = async () => {
@@ -52,6 +140,7 @@ const App = () => {
         ref={editor}
         pickImage={_pickImage}
         setHtml={setHtml}
+        accessToken="<reddit_access_token>"
       />
       <Button onPress={_submit}>Submit</Button>
       <Button onPress={_toggleTheme}>Toggle Theme</Button>

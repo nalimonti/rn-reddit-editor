@@ -47,4 +47,12 @@ describe('htmlToRichTextJSON', () => {
         '</pre>')
     ).toEqual({"document":[{"e":"par","c":[{"e":"spoilertext","c":[{"e":"text","t":"Don't spoil it for me"}]}]},{"e":"code","c":[{"e":"raw","t":"function main()"},{"e":"raw","t":"{"},{"e":"raw","t":"    console.log(\"hello world\");"},{"e":"raw","t":"}"}]}]})
   })
+
+  test('Image', () => {
+    const rtJSON = htmlToRichTextJSON('<p>Ubhjkn</p><p><br></p><img class="image-blot" src="http://rayleehomes.com/wp-content/uploads/2020/09/Raylee_DreamHome_Images2.jpg" data-asset-id="nh8qumjnmbq81" data-caption="My awesome caption!" data-src="http://rayleehomes.com/wp-content/uploads/2020/09/Raylee_DreamHome_Images2.jpg"><p><br></p>'),
+      imgSegment = rtJSON.document?.find(({ e }) => e === 'img');
+    expect(!!imgSegment).toBeTruthy();
+    expect(imgSegment?.id).toEqual('nh8qumjnmbq81');
+    expect(imgSegment?.c).toEqual('My awesome caption!');
+  })
 })
