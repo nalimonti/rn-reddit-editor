@@ -8,6 +8,7 @@ export interface EditorProps {
   editorProps?: QuillEditorProps;
   setHtml: (html: string) => void;
   accessToken?: string;
+  onChangeFocus?: (focused: boolean) => void;
 }
 
 export interface RichTextJSONSegment {

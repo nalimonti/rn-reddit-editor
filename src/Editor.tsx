@@ -1,4 +1,4 @@
-import React, {forwardRef, useImperativeHandle, useMemo, useRef, useState} from "react";
+import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react";
 import QuillEditor from 'react-native-cn-quill';
 import {EditorProps} from './types';
 import {View} from "react-native";
@@ -50,6 +50,10 @@ const Editor = forwardRef<EditorHandle, EditorProps>((props, ref) => {
     blur: blurEditor,
     dangerouslyPasteHTML
   }))
+
+  useEffect(() => {
+    if (props.onChangeFocus) props.onChangeFocus(focused);
+  }, [ focused ])
 
   const dangerouslyPasteHTML = (index: number, html: string) => editor?.current?.dangerouslyPasteHTML(index, html);
 
