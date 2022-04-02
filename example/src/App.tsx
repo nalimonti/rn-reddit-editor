@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Button, StyleSheet, View, SafeAreaView, StatusBar, ActivityIndicator} from 'react-native';
-import { Editor, EditorHandle, htmlToRichTextJSON } from 'rn-reddit-editor';
+import { Editor, EditorHandle, htmlToRichTextJSON, richTextJSONToHtml } from 'rn-reddit-editor';
 import {useRef, useState} from "react";
 
 export default function App() {
@@ -21,7 +21,11 @@ export default function App() {
   }
 
   const _submit = async () => {
-    console.log(htmlToRichTextJSON(html));
+    console.log('html', html)
+    const rtJSON = htmlToRichTextJSON(html);
+    console.log(rtJSON);
+    console.log(richTextJSONToHtml(rtJSON.document))
+
   }
 
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');

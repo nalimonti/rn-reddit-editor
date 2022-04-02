@@ -9,25 +9,17 @@ const FORMAT_CODES = {
   CODE: 64,
 }
 
-const _isSpoiler = (node: Element) => {
-  const styles = node.attributes?.getNamedItem('style')?.nodeValue ?? '';
-  return (styles.includes(`color: white`) && styles.includes(`background-color: black`))
-    || (styles.includes(`color: black`) && styles.includes(`background-color: white`));
-}
-
 type Segment = { text: string; tags: string[] }
 type Formats = Array<number[]>;
 
 const serializeChildNodes = (node: ChildNode) => {
   const iterate = (n: any, parts: Segment[], tags: string[]): Segment[] => {
-    //TODO better way to handle this?
-    const isSpoiler = _isSpoiler(n);
     const href = n.attributes?.getNamedItem('href')?.nodeValue;
     if (n.nodeType === 3 && !!n.nodeValue) {
       parts.push({ text: n.nodeValue, tags: [ ...tags ] });
     }
     const children = Array.from(n.childNodes || []);
-    children?.forEach(c => iterate(c, parts, [ ...tags, (c as ChildNode).nodeName, ...(isSpoiler ? [ 'spoiler' ] : []), ...(href?.length ? [ `href:${href}` ] : []) ]));
+    children?.forEach(c => iterate(c, parts, [ ...tags, (c as ChildNode).nodeName, ...(href?.length ? [ `href:${href}` ] : []) ]));
     return parts;
   }
   const segments = iterate(node, [], [ node.nodeName ]),
@@ -105,6 +97,7 @@ const serializeBlockquote = (nodes: ChildNode[], segments: RichTextJSONSegment[]
 }
 
 export const htmlToRichTextJSON = (html: string) => {
+  console.log(html)
   const parsedDoc = html?.length ? new DOMParser().parseFromString(html, 'text/html') : undefined;
   const segments: RichTextJSONSegment[] = [];
   const nodes = parsedDoc?.childNodes;
@@ -161,4 +154,227 @@ export const isValidURL = (str: string) => {
   let url;
   try { url = new URL(str); } catch (_) { return false; }
   return /https?/.test(url.protocol);
+}
+
+const extractTextParts = (t: string, f: Array<number[]>): { text?: string; sum?: number }[] => {
+  const ret = [];
+  let str = '', currF: number[]|undefined = f[0], currSum = 0;
+  for (let i = 0; i < t.length; i++) {
+    const [ sum, start, len ] = currF || [],
+      end = currF ? (start + len) - 1 : undefined;
+    if (i === t.length - 1) {
+      ret.push({ text: str + t[i], sum: currSum })
+      continue;
+    }
+    // beginning of formatted segment
+    if (i === start) {
+      if (str.length) ret.push({ text: str, sum: currSum });
+      str = t[i];
+      currSum = sum || 0;
+      continue;
+    }
+    // no formatting for current position, or in middle of formatted segment
+    if (!currF || i < start || (end && i < end)) {
+      str += t[i];
+      continue;
+    }
+    // end of formatted segment
+    str += t[i];
+    const nextChar = i + 1 < t.length - 1 ? t[i + 1] : undefined;
+    if (nextChar === ' ') {
+      str += t[i + 1];
+      i++;
+    }
+    ret.push({ text: str, sum: currSum });
+    // remove the current formatting
+    f.splice(0, 1);
+    currF = f.length ? f[0] : undefined;
+    str = '';
+    currSum = 0;
+  }
+  return ret;
+}
+
+const appendSpoiler = (doc: Document, container: HTMLElement, node: RichTextJSONSegment) => {
+  const { c } = node;
+  const spoiler = doc.createElement('spoiler');
+  if (Array.isArray(c)) spoiler.textContent = (c || []).map(({ t }) => t).join(' ');
+  container.appendChild(spoiler);
+}
+
+const deserializeTextNode = (doc: Document, container: HTMLElement, node: RichTextJSONSegment) => {
+  const { f, t = '', e, u } = node;
+  console.log('deserialize', node)
+
+  if (e === 'link') {
+    const a = doc.createElement('a');
+    a.textContent = t;
+    a.setAttribute('href', u || '');
+    container.appendChild(a);
+    return;
+  }
+
+  if (e === 'spoilertext') return appendSpoiler(doc, container, node);
+
+  if (!Array.isArray(f) || !f.length) {
+    container.textContent = t;
+    return;
+  }
+
+  const textParts = extractTextParts(t, f);
+
+  console.log('textparts', textParts)
+
+  let prevEl: HTMLElement,
+    currEl: HTMLElement;
+  for (let j = 0; j <= textParts.length - 1; j++) {
+    const { text, sum = 0 } = textParts[j];
+    if (!sum) {
+      currEl = doc.createElement('span');
+      currEl.textContent = text || '';
+    }
+    if (sum === FORMAT_CODES.BOLD) {
+      currEl = doc.createElement('strong');
+      currEl.textContent = text || '';
+    }
+    if (sum === FORMAT_CODES.ITALIC) {
+      currEl = doc.createElement('em');
+      currEl.textContent = text || '';
+    }
+    if (sum === FORMAT_CODES.STRIKE) {
+      currEl = doc.createElement('s');
+      currEl.textContent = text || '';
+    }
+    if (sum === FORMAT_CODES.SUPER) {
+      currEl = doc.createElement('sup');
+      currEl.textContent = text || '';
+    }
+    if ([10].indexOf(sum) >= 0) {
+      currEl = doc.createElement('s');
+      currEl.textContent = text || '';
+      if (prevEl?.nodeName === 'em') {
+        prevEl.appendChild(currEl);
+        continue;
+      }
+      else {
+        const em = doc.createElement('em');
+        em.appendChild(currEl);
+        container.appendChild(em);
+        continue;
+      }
+    }
+    if ([3, 9].indexOf(sum) >= 0) {
+      if (sum === 3) {
+        currEl = doc.createElement('em');
+        currEl.textContent = text || '';
+      }
+      else if (sum === 9) {
+        currEl = doc.createElement('s');
+        currEl.textContent = text || '';
+      }
+      if (prevEl?.nodeName === 'strong') {
+        prevEl?.appendChild(currEl);
+        continue;
+      }
+      else {
+        const strong = doc.createElement('strong');
+        strong.appendChild(currEl);
+        container.appendChild(strong);
+        continue;
+      }
+    }
+    else if (sum === 33) {
+      const sup = doc.createElement('sup'),
+        strong = doc.createElement('strong');
+      strong.textContent = text || '';
+      prevEl = sup;
+      sup.appendChild(strong);
+      container.appendChild(sup);
+      continue;
+    }
+    else if (sum === 34) {
+      const sup = doc.createElement('sup'),
+        em = doc.createElement('em');
+      em.textContent = text || '';
+      sup.appendChild(em);
+      container.appendChild(sup);
+      continue;
+    }
+    else if (sum === FORMAT_CODES.CODE) {
+      currEl = doc.createElement('code');
+      currEl.textContent = text || '';
+    }
+
+    if (currEl) {
+      container.appendChild(currEl);
+      prevEl = currEl;
+    }
+  }
+}
+
+const deserializeJSONSegment = (doc: Document, segment: RichTextJSONSegment) => {
+  const { e, c, o } = segment;
+  let container: HTMLElement;
+  if (e === 'par') container = doc.createElement('p');
+  else if (e === 'list') container = doc.createElement(!!o ? 'ol' : 'ul');
+  else if (e === 'code') {
+    container = doc.createElement('pre');
+    if (Array.isArray(c)) container.textContent = c.map(({ t }) => t || '').join('\n') + '\n';
+    return container;
+  }
+  else if (e === 'spoilertext') {
+    container = doc.createElement('spoiler');
+    if (Array.isArray(c)) container.textContent = c.map(({ t }) => t || '').join(' ');
+    return container;
+  }
+  else if (e === 'h') {
+    container = doc.createElement('h1');
+    if (Array.isArray(c)) container.textContent = c.map(({ t }) => t || '').join(' ');
+    return container;
+  }
+  else if (e === 'blockquote') {
+    container = doc.createElement('span');
+    if (Array.isArray(c)) {
+      c.forEach(({ c: innerC }) => {
+        const blockquote = doc.createElement('blockquote');
+        if (Array.isArray(innerC)) {
+          innerC.forEach(node => deserializeTextNode(doc, blockquote, node));
+        }
+        container.appendChild(blockquote);
+      });
+    }
+    return container;
+  }
+  if (Array.isArray(c) && c.length) {
+    for (let j = 0; j <= c.length - 1; j++) {
+      const { e: innerE, c: innerC } = c[j];
+      if (['text', 'link'].indexOf(innerE) >= 0) {
+        deserializeTextNode(doc, container, c[j]);
+      }
+      else if (innerE === 'li') {
+        const li = doc.createElement('li');
+        if (Array.isArray(innerC))
+          (innerC || []).forEach(({ c }) => {
+            if (Array.isArray(c)) (c || []).forEach(node => deserializeTextNode(doc, li, node))
+          })
+        container.appendChild(li);
+      }
+      else if (innerE === 'spoilertext') {
+        appendSpoiler(doc, container, c[j]);
+      }
+    }
+  }
+  console.log(container?.toString());
+  return container;
+}
+
+export const richTextJSONToHtml = (richTextJSON: RichTextJSONSegment[]) => {
+  console.log(richTextJSON);
+  console.log(JSON.stringify(richTextJSON))
+  const html = new DOMParser().parseFromString('<div></div>', 'text/html');
+  for (let i = 0; i <= richTextJSON.length - 1; i++) {
+    const { e, c } = richTextJSON[i];
+    html.appendChild(deserializeJSONSegment(html, richTextJSON[i]));
+  }
+  return html.toString().replace('<div xmlns="http://www.w3.org/1999/xhtml"></div>', '');
 }

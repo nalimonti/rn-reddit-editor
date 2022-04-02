@@ -181,6 +181,14 @@ const Toolbar = (props: Props) => {
     <VerticalDivider theme={props.theme} />
   ), [ props.theme ])
 
+
+
+  const addSpoiler = async () => {
+    // await props.editor?.current?.insertEmbed(0, 'spoiler', 'spoiler!');
+    const text = await props.editor?.current?.getText();
+    await props.editor?.current?.insertText(text.length - 1, 'spoiler', { spoiler: true });
+  }
+
   return (
     <KeyboardAvoidingView
       onTouchStart={(e) => e.stopPropagation()}
@@ -280,7 +288,8 @@ const Toolbar = (props: Props) => {
             { divider }
             <ToolbarButton
               active={formatActive(FORMAT.SPOILER)}
-              onPress={toggleStyle(FORMAT.SPOILER)}
+              // onPress={toggleStyle(FORMAT.SPOILER)}
+              onPress={addSpoiler}
             >
               <MemoizedThemedIcon icon={FORMAT.SPOILER} theme={props.theme} />
             </ToolbarButton>

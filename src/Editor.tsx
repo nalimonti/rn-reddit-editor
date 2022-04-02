@@ -8,8 +8,10 @@ import {COLORS} from "./constants";
 import {uploadImage} from "./uploadUtils";
 
 const CUSTOM_QUILL_JS = `
-const InlineBlot = Quill.import('blots/block');
-class ImageBlot extends InlineBlot {
+const BlockBlot = Quill.import('blots/block');
+const InlineBlot = Quill.import('blots/inline');
+
+class ImageBlot extends BlockBlot {
   static create(data) {
     const node = super.create(data);
     node.setAttribute('src', data.url);
@@ -26,7 +28,19 @@ class ImageBlot extends InlineBlot {
 ImageBlot.blotName = 'imageBlot';
 ImageBlot.className = 'image-blot';
 ImageBlot.tagName = 'img';
+
+class SpoilerBlot extends InlineBlot {
+  static tagName = 'spoiler';
+  static blotName = 'spoiler';
+
+  static create(data) {
+    const node = super.create(data);
+    return node;
+  }
+}
+
 Quill.register({ 'formats/imageBlot': ImageBlot });
+Quill.register({ 'formats/spoiler': SpoilerBlot });
 `;
 
 export interface EditorHandle {
@@ -49,7 +63,7 @@ const Editor = forwardRef<EditorHandle, EditorProps>((props, ref) => {
     focus: focusEditor,
     blur: blurEditor,
     dangerouslyPasteHTML
-  }))
+  }), [ editor ])
 
   useEffect(() => {
     if (props.onChangeFocus) props.onChangeFocus(focused);
@@ -118,6 +132,7 @@ const Editor = forwardRef<EditorHandle, EditorProps>((props, ref) => {
             customJS={CUSTOM_QUILL_JS}
             onFocus={onFocus}
             onBlur={onBlur}
+            customStyles={['spoiler { background-color: red; color: white; }']}
             {...(props.editorProps || {})}
           />
         </View>
